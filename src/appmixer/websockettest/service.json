@@ -2,5 +2,6 @@
     "name": "appmixer.websockettest",
     "label": "WebSocket Test",
     "category": "applications",
-    "description": "Test connector for verifying WebSocket live connections pattern in Appmixer."
+    "description": "Test connector for verifying WebSocket live connections pattern in Appmixer.",
+    "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiMzMzMiIHN0cm9rZS13aWR0aD0iMiI+PHBhdGggZD0iTTEgMTJzNC04IDExLTggMTEgOCAxMSA4Ii8+PHBhdGggZD0iTTEgMTJzNC04IDExLTggMTEgOCAxMSA4IiB0cmFuc2Zvcm09InJvdGF0ZSg5MCAxMiAxMikiLz48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIzIi8+PC9zdmc+"
 }
