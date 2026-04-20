@@ -19,7 +19,7 @@ module.exports = (context) => {
 
     context.http.router.register({
         method: 'POST',
-        path: '/send',
+        path: '/push-message',
         options: {
             handler: async (req) => {
 

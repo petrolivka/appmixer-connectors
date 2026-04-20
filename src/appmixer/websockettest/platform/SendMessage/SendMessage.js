@@ -12,7 +12,7 @@ module.exports = {
             const message = context.messages.in.content.message;
 
             await context.callAppmixer({
-                endPoint: '/plugins/appmixer/websockettest/send',
+                endPoint: '/plugins/appmixer/websockettest/push-message',
                 method: 'POST',
                 body: { connectionId, message }
             });
