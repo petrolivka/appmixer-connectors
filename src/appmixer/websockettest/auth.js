@@ -12,10 +12,10 @@ module.exports = {
 
             tokenType: 'authentication-token',
 
-            accountNameFromProfileInfo: 'name',
+            accountNameFromProfileInfo: 'connectionName',
 
             auth: {
-                name: {
+                connectionName: {
                     type: 'text',
                     name: 'Connection Name',
                     tooltip: 'A descriptive name for this WebSocket connection.'
@@ -25,6 +25,11 @@ module.exports = {
                     name: 'WebSocket URL',
                     tooltip: 'The WebSocket server URL. Example: wss://echo.websocket.org or ws://localhost:8080.'
                 }
+            },
+
+            requestProfileInfo: async context => {
+
+                return { connectionName: context.connectionName };
             },
 
             validate: async context => {
