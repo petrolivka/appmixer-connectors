@@ -12,9 +12,9 @@ module.exports = {
             const message = context.messages.in.content.message;
 
             await context.callAppmixer({
-                endPoint: `/plugins/appmixer/websockettest/connections/${connectionId}/send`,
+                endPoint: '/plugins/appmixer/websockettest/send',
                 method: 'POST',
-                body: { message }
+                body: { connectionId, message }
             });
 
             return context.sendJson({ message, sent: true }, 'out');

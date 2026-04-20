@@ -19,12 +19,11 @@ module.exports = (context) => {
 
     context.http.router.register({
         method: 'POST',
-        path: '/connections/{connectionId}/send',
+        path: '/send',
         options: {
             handler: async (req) => {
 
-                const { connectionId } = req.params;
-                const { message } = req.payload;
+                const { connectionId, message } = req.payload;
                 await connections.sendMessage(context, connectionId, message);
                 return {};
             }
