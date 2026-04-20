@@ -14,7 +14,7 @@ if (process.WS_CONNECTOR_OPEN_CONNECTIONS) {
  * Build a deterministic connection ID for a flow. This ensures all components
  * in the same flow share the same WebSocket connection.
  */
-const buildConnectionId = (flowId) => `ws:${flowId}`;
+const buildConnectionId = (flowId) => `ws-${flowId}`;
 
 /**
  * Opens a shared WebSocket connection for a flow. If a connection for this flow
