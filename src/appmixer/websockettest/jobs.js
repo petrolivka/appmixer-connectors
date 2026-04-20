@@ -53,7 +53,7 @@ module.exports = async (context) => {
                             context,
                             connectionParameters.url,
                             connectionParameters.flowId,
-                            connectionParameters.componentId,
+                            connectionParameters.receiverComponentId,
                             connectionId
                         );
                     }

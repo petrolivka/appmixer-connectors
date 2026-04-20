@@ -10,12 +10,35 @@ if (process.WS_CONNECTOR_OPEN_CONNECTIONS) {
     process.WS_CONNECTOR_OPEN_CONNECTIONS = WS_CONNECTOR_OPEN_CONNECTIONS = {};
 }
 
-const addConnection = async (context, url, flowId, componentId, connId) => {
+/**
+ * Build a deterministic connection ID for a flow. This ensures all components
+ * in the same flow share the same WebSocket connection.
+ */
+const buildConnectionId = (flowId) => `ws:${flowId}`;
 
-    const connectionId = connId || `ws:${flowId}:${componentId}:${Math.random().toString(36).substring(7)}`;
+/**
+ * Opens a shared WebSocket connection for a flow. If a connection for this flow
+ * already exists and is open, returns the existing connectionId.
+ * @param {Object} context Plugin context
+ * @param {string} url WebSocket server URL
+ * @param {string} flowId Flow ID
+ * @param {string} receiverComponentId Component ID that should receive incoming messages (trigger)
+ * @param {string} [connId] Optional explicit connection ID
+ */
+const addConnection = async (context, url, flowId, receiverComponentId, connId) => {
+
+    const connectionId = connId || buildConnectionId(flowId);
+
+    // If connection already exists and is open, just update the state (receiver might change).
+    const existingWs = WS_CONNECTOR_OPEN_CONNECTIONS[connectionId];
+    if (existingWs && existingWs.readyState === WebSocket.OPEN) {
+        await context.log('info', `[WS-TEST] Connection ${connectionId} already open. Updating state.`);
+        await context.service.stateSet(connectionId, { url, flowId, receiverComponentId });
+        return connectionId;
+    }
 
     await context.service.stateSet(connectionId, {
-        url, flowId, componentId
+        url, flowId, receiverComponentId
     });
 
     const ws = new WebSocket(url);
@@ -40,12 +63,16 @@ const addConnection = async (context, url, flowId, componentId, connId) => {
             message = data;
         }
 
-        await context.triggerComponent(
-            flowId,
-            componentId,
-            { message, timestamp: new Date().toISOString() },
-            { enqueueOnly: 'true' }
-        );
+        // Deliver incoming messages to the receiver component (NewMessage trigger).
+        const connState = await context.service.stateGet(connectionId);
+        if (connState && connState.receiverComponentId) {
+            await context.triggerComponent(
+                flowId,
+                connState.receiverComponentId,
+                { message, timestamp: new Date().toISOString() },
+                { enqueueOnly: 'true' }
+            );
+        }
     });
 
     ws.on('close', async (code, reason) => {
@@ -61,6 +88,9 @@ const addConnection = async (context, url, flowId, componentId, connId) => {
     return connectionId;
 };
 
+/**
+ * Send a message through an existing connection. Reconnects automatically if needed.
+ */
 const sendMessage = async (context, connectionId, message) => {
 
     let ws = WS_CONNECTOR_OPEN_CONNECTIONS[connectionId];
@@ -71,7 +101,7 @@ const sendMessage = async (context, connectionId, message) => {
             throw new Error(`WebSocket connection ${connectionId} not found in state.`);
         }
         await context.log('info', `[WS-TEST] Reconnecting WebSocket ${connectionId} to ${connection.url}.`);
-        await addConnection(context, connection.url, connection.flowId, connection.componentId, connectionId);
+        await addConnection(context, connection.url, connection.flowId, connection.receiverComponentId, connectionId);
         ws = WS_CONNECTOR_OPEN_CONNECTIONS[connectionId];
         if (!ws || ws.readyState !== WebSocket.OPEN) {
             throw new Error(`WebSocket connection ${connectionId} failed to reconnect.`);
@@ -96,6 +126,7 @@ const removeConnection = async (context, connectionId) => {
 const listConnections = () => { return WS_CONNECTOR_OPEN_CONNECTIONS; };
 
 module.exports = {
+    buildConnectionId,
     addConnection,
     sendMessage,
     removeConnection,

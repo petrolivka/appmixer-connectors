@@ -12,7 +12,7 @@ module.exports = {
             method: 'POST',
             body: {
                 url,
-                componentId,
+                receiverComponentId: componentId,
                 flowId
             }
         });

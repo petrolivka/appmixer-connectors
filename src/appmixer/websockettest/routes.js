@@ -10,8 +10,8 @@ module.exports = (context) => {
         options: {
             handler: async (req) => {
 
-                const { flowId, componentId, url } = req.payload;
-                const connectionId = await connections.addConnection(context, url, flowId, componentId);
+                const { flowId, receiverComponentId, url } = req.payload;
+                const connectionId = await connections.addConnection(context, url, flowId, receiverComponentId);
                 return { connectionId };
             }
         }
@@ -40,6 +40,18 @@ module.exports = (context) => {
                 const { connectionId } = req.params;
                 await connections.removeConnection(context, connectionId);
                 return {};
+            }
+        }
+    });
+
+    context.http.router.register({
+        method: 'GET',
+        path: '/connections',
+        options: {
+            handler: async () => {
+
+                const open = connections.listConnections();
+                return { count: Object.keys(open).length, ids: Object.keys(open) };
             }
         }
     });
