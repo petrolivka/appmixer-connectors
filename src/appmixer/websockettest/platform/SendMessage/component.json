@@ -1,0 +1,42 @@
+{
+    "name": "appmixer.websockettest.platform.SendMessage",
+    "author": "Appmixer",
+    "description": "Send a message to a WebSocket server.",
+    "private": false,
+    "version": "1.0.0",
+    "auth": {
+        "service": "appmixer:websockettest"
+    },
+    "inPorts": [{
+        "name": "in",
+        "schema": {
+            "type": "object",
+            "properties": {
+                "message": { "type": "string" }
+            },
+            "required": ["message"]
+        },
+        "inspector": {
+            "inputs": {
+                "message": {
+                    "type": "text",
+                    "label": "Message",
+                    "index": 0,
+                    "tooltip": "The message to send to the WebSocket server."
+                }
+            }
+        }
+    }],
+    "outPorts": [{
+        "name": "out",
+        "options": [{
+            "label": "Message",
+            "value": "message",
+            "schema": { "type": "string" }
+        }, {
+            "label": "Sent",
+            "value": "sent",
+            "schema": { "type": "boolean" }
+        }]
+    }]
+}

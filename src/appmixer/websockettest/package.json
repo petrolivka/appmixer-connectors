@@ -1,0 +1,8 @@
+{
+  "name": "appmixer.websockettest",
+  "version": "1.0.0",
+  "author": "Appmixer",
+  "dependencies": {
+    "ws": "8.18.0"
+  }
+}

@@ -1,0 +1,6 @@
+{
+    "name": "appmixer.websockettest",
+    "label": "WebSocket Test",
+    "category": "applications",
+    "description": "Test connector for verifying WebSocket live connections pattern in Appmixer."
+}

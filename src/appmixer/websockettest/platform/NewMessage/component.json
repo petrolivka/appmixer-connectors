@@ -1,0 +1,22 @@
+{
+    "name": "appmixer.websockettest.platform.NewMessage",
+    "author": "Appmixer",
+    "description": "Receive messages from a WebSocket server.",
+    "private": false,
+    "version": "1.0.0",
+    "auth": {
+        "service": "appmixer:websockettest"
+    },
+    "outPorts": [{
+        "name": "out",
+        "options": [{
+            "label": "Message",
+            "value": "message",
+            "schema": { "type": "string", "examples": ["Hello from WS server"] }
+        }, {
+            "label": "Timestamp",
+            "value": "timestamp",
+            "schema": { "type": "string", "examples": ["2026-04-20T10:00:00.000Z"] }
+        }]
+    }]
+}
