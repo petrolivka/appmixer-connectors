@@ -63,9 +63,19 @@ const addConnection = async (context, url, flowId, componentId, connId) => {
 
 const sendMessage = async (context, connectionId, message) => {
 
-    const ws = WS_CONNECTOR_OPEN_CONNECTIONS[connectionId];
+    let ws = WS_CONNECTOR_OPEN_CONNECTIONS[connectionId];
     if (!ws || ws.readyState !== WebSocket.OPEN) {
-        throw new Error(`WebSocket connection ${connectionId} is not open.`);
+        // Reconnect from persisted state (same pattern as Kafka producer).
+        const connection = await context.service.stateGet(connectionId);
+        if (!connection) {
+            throw new Error(`WebSocket connection ${connectionId} not found in state.`);
+        }
+        await context.log('info', `[WS-TEST] Reconnecting WebSocket ${connectionId} to ${connection.url}.`);
+        await addConnection(context, connection.url, connection.flowId, connection.componentId, connectionId);
+        ws = WS_CONNECTOR_OPEN_CONNECTIONS[connectionId];
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            throw new Error(`WebSocket connection ${connectionId} failed to reconnect.`);
+        }
     }
     ws.send(typeof message === 'string' ? message : JSON.stringify(message));
 };
