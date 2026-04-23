@@ -95,12 +95,23 @@ const openConnection = async (context, appToken) => {
         await context.log('info', `[SLACK-SM] Listeners for ${connectionId}: ${listeners.length}. Looking for eventType: ${eventType}.`);
 
         for (const listener of listeners) {
-            if (listener.eventType !== eventType) continue;
+            await context.log('info', `[SLACK-SM] Checking listener: eventType=${listener.eventType}, componentId=${listener.componentId}, filter=${JSON.stringify(listener.filter)}.`);
+
+            if (listener.eventType !== eventType) {
+                await context.log('info', `[SLACK-SM] Skipping: eventType mismatch (listener=${listener.eventType}, event=${eventType}).`);
+                continue;
+            }
 
             // Apply optional filter (e.g., channel filter).
             if (listener.filter) {
-                if (listener.filter.channelId && actualEvent.channel && listener.filter.channelId !== actualEvent.channel) continue;
-                if (listener.filter.teamId && teamId && listener.filter.teamId !== teamId) continue;
+                if (listener.filter.channelId && actualEvent.channel && listener.filter.channelId !== actualEvent.channel) {
+                    await context.log('info', `[SLACK-SM] Skipping: channel mismatch (filter=${listener.filter.channelId}, event=${actualEvent.channel}).`);
+                    continue;
+                }
+                if (listener.filter.teamId && teamId && listener.filter.teamId !== teamId) {
+                    await context.log('info', `[SLACK-SM] Skipping: team mismatch.`);
+                    continue;
+                }
             }
 
             try {
