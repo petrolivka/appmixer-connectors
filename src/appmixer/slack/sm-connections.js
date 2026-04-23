@@ -50,46 +50,76 @@ const openConnection = async (context, appToken) => {
         clientPingTimeout: 30000
     });
 
+    // Debug: log connection state changes.
+    client.on('connected', () => {
+        context.log('info', `[SLACK-SM] Connection ${connectionId} CONNECTED.`);
+    });
+
+    client.on('connecting', () => {
+        context.log('info', `[SLACK-SM] Connection ${connectionId} CONNECTING...`);
+    });
+
+    client.on('authenticated', (event) => {
+        context.log('info', `[SLACK-SM] Connection ${connectionId} AUTHENTICATED. Info: ${JSON.stringify(event)}.`);
+    });
+
+    // Debug: catch ALL incoming Socket Mode messages to see what comes through.
+    client.on('message', (message) => {
+        context.log('info', `[SLACK-SM] RAW message received: ${JSON.stringify(message).substring(0, 500)}.`);
+    });
+
     // Route Events API events to registered listeners.
     // @slack/socket-mode emits by envelope type: 'events_api', 'slash_commands', 'interactive'.
-    client.on('events_api', async ({ ack, body, event, retry_num, retry_reason }) => {
+    const eventHandler = async ({ ack, body, event, retry_num, retry_reason }) => {
 
         // Acknowledge immediately (Slack requires ACK within 3 seconds).
-        await ack();
+        if (ack) await ack();
+
+        const actualEvent = event || body?.event;
 
         if (retry_num) {
-            await context.log('info', `[SLACK-SM] Retry #${retry_num} (${retry_reason}) for event ${event?.type}.`);
+            await context.log('info', `[SLACK-SM] Retry #${retry_num} (${retry_reason}) for event ${actualEvent?.type}.`);
         }
 
-        const eventType = event?.type;
-        if (!eventType) return;
+        const eventType = actualEvent?.type;
+        if (!eventType) {
+            await context.log('info', `[SLACK-SM] Event without type. Body keys: ${Object.keys(body || {}).join(', ')}.`);
+            return;
+        }
 
         const teamId = body?.team_id;
-        await context.log('info', `[SLACK-SM] Event received: ${eventType}, team: ${teamId}, channel: ${event?.channel}.`);
+        await context.log('info', `[SLACK-SM] Event received: ${eventType}, team: ${teamId}, channel: ${actualEvent?.channel}.`);
 
         // Find matching listeners and trigger their components.
         const listeners = SM_LISTENERS[connectionId] || [];
+        await context.log('info', `[SLACK-SM] Listeners for ${connectionId}: ${listeners.length}. Looking for eventType: ${eventType}.`);
+
         for (const listener of listeners) {
             if (listener.eventType !== eventType) continue;
 
             // Apply optional filter (e.g., channel filter).
             if (listener.filter) {
-                if (listener.filter.channelId && event.channel && listener.filter.channelId !== event.channel) continue;
+                if (listener.filter.channelId && actualEvent.channel && listener.filter.channelId !== actualEvent.channel) continue;
                 if (listener.filter.teamId && teamId && listener.filter.teamId !== teamId) continue;
             }
 
             try {
+                await context.log('info', `[SLACK-SM] Triggering component ${listener.componentId} in flow ${listener.flowId}.`);
                 await context.triggerComponent(
                     listener.flowId,
                     listener.componentId,
-                    { event, body },
+                    { event: actualEvent, body },
                     { enqueueOnly: 'true' }
                 );
             } catch (err) {
                 await context.log('error', `[SLACK-SM] Error triggering ${listener.componentId}: ${err.message}.`);
             }
         }
-    });
+    };
+
+    // Listen on both possible event names.
+    client.on('events_api', eventHandler);
+    client.on('slack_event', eventHandler);
 
     client.on('disconnect', async () => {
         await context.log('info', `[SLACK-SM] Connection ${connectionId} disconnected. Auto-reconnect will handle it.`);
