@@ -51,80 +51,75 @@ const openConnection = async (context, appToken) => {
     });
 
     // Debug: log connection state changes.
-    client.on('connected', () => {
-        context.log('info', `[SLACK-SM] Connection ${connectionId} CONNECTED.`);
+    client.on('connected', async () => {
+        await context.log('info', `[SLACK-SM] Connection ${connectionId} CONNECTED.`);
     });
 
-    client.on('connecting', () => {
-        context.log('info', `[SLACK-SM] Connection ${connectionId} CONNECTING...`);
+    client.on('connecting', async () => {
+        await context.log('info', `[SLACK-SM] Connection ${connectionId} CONNECTING...`);
     });
 
-    client.on('authenticated', (event) => {
-        context.log('info', `[SLACK-SM] Connection ${connectionId} AUTHENTICATED. Info: ${JSON.stringify(event)}.`);
-    });
-
-    // Debug: catch ALL incoming Socket Mode messages to see what comes through.
-    client.on('message', (message) => {
-        context.log('info', `[SLACK-SM] RAW message received: ${JSON.stringify(message).substring(0, 500)}.`);
+    client.on('authenticated', async (event) => {
+        await context.log('info', `[SLACK-SM] Connection ${connectionId} AUTHENTICATED. Info: ${JSON.stringify(event)}.`);
     });
 
     // Route Events API events to registered listeners.
     // @slack/socket-mode emits by envelope type: 'events_api', 'slash_commands', 'interactive'.
-    const eventHandler = async ({ ack, body, event, retry_num, retry_reason }) => {
+    const eventHandler = async (args) => {
 
-        // Acknowledge immediately (Slack requires ACK within 3 seconds).
-        if (ack) await ack();
+        try {
+            const { ack, body } = args;
+            const event = args.event || body?.event;
 
-        const actualEvent = event || body?.event;
+            // Acknowledge immediately (Slack requires ACK within 3 seconds).
+            if (ack) await ack();
 
-        if (retry_num) {
-            await context.log('info', `[SLACK-SM] Retry #${retry_num} (${retry_reason}) for event ${actualEvent?.type}.`);
-        }
+            await context.log('info', `[SLACK-SM] eventHandler fired. Args keys: ${Object.keys(args).join(', ')}. Event type: ${event?.type}.`);
 
-        const eventType = actualEvent?.type;
-        if (!eventType) {
-            await context.log('info', `[SLACK-SM] Event without type. Body keys: ${Object.keys(body || {}).join(', ')}.`);
-            return;
-        }
-
-        const teamId = body?.team_id;
-        await context.log('info', `[SLACK-SM] Event received: ${eventType}, team: ${teamId}, channel: ${actualEvent?.channel}.`);
-
-        // Find matching listeners and trigger their components.
-        const listeners = SM_LISTENERS[connectionId] || [];
-        await context.log('info', `[SLACK-SM] Listeners for ${connectionId}: ${listeners.length}. Looking for eventType: ${eventType}.`);
-
-        for (const listener of listeners) {
-            await context.log('info', `[SLACK-SM] Checking listener: eventType=${listener.eventType}, componentId=${listener.componentId}, filter=${JSON.stringify(listener.filter)}.`);
-
-            if (listener.eventType !== eventType) {
-                await context.log('info', `[SLACK-SM] Skipping: eventType mismatch (listener=${listener.eventType}, event=${eventType}).`);
-                continue;
+            const eventType = event?.type;
+            if (!eventType) {
+                await context.log('info', `[SLACK-SM] Event without type. Body keys: ${Object.keys(body || {}).join(', ')}.`);
+                return;
             }
 
-            // Apply optional filter (e.g., channel filter).
-            if (listener.filter) {
-                if (listener.filter.channelId && actualEvent.channel && listener.filter.channelId !== actualEvent.channel) {
-                    await context.log('info', `[SLACK-SM] Skipping: channel mismatch (filter=${listener.filter.channelId}, event=${actualEvent.channel}).`);
-                    continue;
-                }
-                if (listener.filter.teamId && teamId && listener.filter.teamId !== teamId) {
-                    await context.log('info', `[SLACK-SM] Skipping: team mismatch.`);
-                    continue;
-                }
-            }
+            const teamId = body?.team_id;
+            await context.log('info', `[SLACK-SM] Event received: ${eventType}, team: ${teamId}, channel: ${event?.channel}.`);
 
-            try {
+            // Find matching listeners and trigger their components.
+            const listeners = SM_LISTENERS[connectionId] || [];
+            await context.log('info', `[SLACK-SM] Listeners for ${connectionId}: ${listeners.length}. Looking for eventType: ${eventType}.`);
+
+            for (const listener of listeners) {
+                await context.log('info', `[SLACK-SM] Checking listener: eventType=${listener.eventType}, componentId=${listener.componentId}, filter=${JSON.stringify(listener.filter)}.`);
+
+                if (listener.eventType !== eventType) {
+                    await context.log('info', `[SLACK-SM] Skipping: eventType mismatch (listener=${listener.eventType}, event=${eventType}).`);
+                    continue;
+                }
+
+                // Apply optional filter (e.g., channel filter).
+                if (listener.filter) {
+                    if (listener.filter.channelId && event.channel && listener.filter.channelId !== event.channel) {
+                        await context.log('info', `[SLACK-SM] Skipping: channel mismatch (filter=${listener.filter.channelId}, event=${event.channel}).`);
+                        continue;
+                    }
+                    if (listener.filter.teamId && teamId && listener.filter.teamId !== teamId) {
+                        await context.log('info', `[SLACK-SM] Skipping: team mismatch.`);
+                        continue;
+                    }
+                }
+
                 await context.log('info', `[SLACK-SM] Triggering component ${listener.componentId} in flow ${listener.flowId}.`);
                 await context.triggerComponent(
                     listener.flowId,
                     listener.componentId,
-                    { event: actualEvent, body },
+                    { event, body },
                     { enqueueOnly: 'true' }
                 );
-            } catch (err) {
-                await context.log('error', `[SLACK-SM] Error triggering ${listener.componentId}: ${err.message}.`);
+                await context.log('info', `[SLACK-SM] Component ${listener.componentId} triggered successfully.`);
             }
+        } catch (err) {
+            await context.log('error', `[SLACK-SM] eventHandler error: ${err.message}. Stack: ${err.stack}.`);
         }
     };
 
