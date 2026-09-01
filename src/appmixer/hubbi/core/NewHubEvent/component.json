@@ -5,7 +5,7 @@
     "description": "Trigger that fires when the selected hub sends data to this flow. Setup: HubBI has no API for registering a webhook, so the registration is manual - start the flow, copy this component's webhook URL from the flow log, and configure the selected hub in HubBI to post its events to that URL.",
     "private": false,
     "webhook": true,
-    "version": "1.0.0",
+    "version": "1.3.0",
     "auth": {
         "service": "appmixer:hubbi"
     },

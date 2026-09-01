@@ -3,7 +3,7 @@
     "label": "Start Hub With Data",
     "description": "Start a hub with one or more records matching the hub field definitions.",
     "author": "Appmixer <info@appmixer.com>",
-    "version": "1.0.0",
+    "version": "1.3.0",
     "private": false,
     "auth": {
         "service": "appmixer:hubbi"

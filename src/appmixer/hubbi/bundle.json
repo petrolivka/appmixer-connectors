@@ -1,19 +1,61 @@
 {
     "name": "appmixer.hubbi",
-    "version": "1.0.0",
+    "version": "1.8.0",
     "changelog": {
         "1.0.0": [
-            "Initial release.",
-            "Receive Hub: webhook trigger that fires when the selected hub sends data to the flow. HubBI has no API for registering a webhook, so the registration is manual: start the flow, copy the component's webhook URL from the flow log and point the hub at it in HubBI. Records are emitted one at a time by default, or all at once as a single list; in both modes the hub's target fields are exposed on the output port. An event carrying no records is acknowledged without triggering the flow. A flow refuses to start when a Start Hub or Start Hub With Data in it uses the same hub, which would make the flow trigger itself.",
-            "Start Hub: start a hub that does not take any data.",
-            "Start Hub With Data: start a hub with one or more records, built from the hub's source field definitions and sent in a single bulk request. .NET field types (Int32, Int64, Double, Decimal, DateTime, Date, Guid, Boolean, ...) are mapped to matching inspector input types and JSON schema types, in every notation HubBI reports them: bare (Int32), fully qualified (System.Int32) and nullable (System.Nullable`1[System.Int32]). The SourceFields and TargetFields endpoints do not agree on which one they use.",
-            "The hub picker is a dropdown of the hubs available to the connected HubBI client, so a hub is picked, never typed. Each action reads its hubs from the list that fits it: target hubs for Receive Hub, source hubs with or without post data for the two Start Hub actions.",
-            "HTTP 409 (Conflict) is treated as transient and retried, while HTTP 423 (Locked) is not retried. All other errors keep the retry engine's default classification.",
-            "Flow Test Mode: Receive Hub throws with an explanation instead of emitting an example. HubBI exposes no endpoint for reading past hub events, so any sample would have to be invented - it would match no real run and make the test pass while testing nothing. Real output requires starting the flow and sending data from the hub.",
+            "Initial release."
+        ],
+        "1.1.0": [
+            "Add dynamic source field inputs to StartHubWithData based on selected hub.",
+            "Add NewHubEvent webhook trigger component.",
+            "Mark ListHubs, GetSourceFields, GetTargetFields as private helper components.",
+            "StartHubWithData returns conversionKey on success (fire-and-forget async action)."
+        ],
+        "1.1.1": [
+            "NewHubEvent: load output port fields from TargetFields endpoint instead of SourceFields."
+        ],
+        "1.2.0": [
+            "Replace removed HubsList endpoint with three dedicated list helpers: ListSourceHubsWithoutPostData (used by StartHub), ListSourceHubsWithPostData (used by StartHubWithData), and ListTargetHubs (used by NewHubEvent).",
+            "Auth: use ListTargetHubs endpoint for profile/validate checks (HubsList endpoint was removed)."
+        ],
+        "1.3.0": [
+            "Map .NET field types (Int32, Int64, Double, Decimal, DateTime, Date, Guid, Boolean, ...) to matching Appmixer inspector input types and JSON schema types in StartHubWithData inputs and NewHubEvent output port options."
+        ],
+        "1.4.0": [
+            "StartHubWithData: support sending multiple records (bulk) in a single request. A 'Records source' switch lets you either build rows manually using the hub's dynamic source fields (repeating 'Records' field) or map a whole array of records from a previous step ('Records array'). The request body is sent as a JSON array either way. BREAKING: the input shape changed from flat per-field inputs to the new records inputs, so existing flows must remap their fields. Output now also returns the records count."
+        ],
+        "1.4.1": [
+            "StartHubWithData: fix bulk array input being collapsed into a single record. When a whole array is mapped from a previous step, Appmixer may serialize it into an object keyed by index (\"0\", \"1\", \"2\", ...); the component now restores it to an array so all records are sent to the hub.",
+            "NewHubEvent: fix webhook payload carrying an array of records being spread into an object with numeric keys (\"0\", \"1\", \"2\", ...) on the output. The trigger now exposes the records as an array under 'result' (with a 'count'), preserving a bulk batch as an array. BREAKING: the output shape changed from flat per-field columns to 'conversionKey' + 'result' array, so existing flows reading fields directly must remap them under 'result'."
+        ],
+        "1.5.0": [
+            "NewHubEvent: add an 'Output Type' option (First record / All records at once / One record at a time) and route the output through the shared lib helpers (sendArrayOutput / getOutputPortOptions). In the 'One record at a time' and 'First record' modes the individual hub fields are now exposed directly on the output port instead of being nested under the 'result' array. Loading the hub fields for the output port options is now fault-tolerant: if the TargetFields lookup fails, the generic record options are still offered instead of the option list ending up empty. BREAKING: the standalone 'conversionKey' output field was removed; events are already filtered to the configured hub."
+        ],
+        "1.6.0": [
+            "StartHub and StartHubWithData: re-classify Hubbi HTTP errors for the retry engine via the shared lib.rethrowHubbiError helper. A 409 (Conflict) is now treated as transient and retried (the engine would otherwise drop it as a permanent client error), while a 423 (Locked) is turned into a CancelError so it is NOT retried (the engine would otherwise retry it as an unknown error). All other errors keep the engine's default classification."
+        ],
+        "1.7.0": [
+            "StartHubWithData: remove the 'Records source' switch and the 'Map array from previous step' mode. Records are now always built manually using the hub's dynamic source fields (the repeating 'Records' field), which is no longer hidden behind a visibility gate. BREAKING: flows that mapped a whole array from a previous step must be reconfigured to build the records manually.",
+            "Rename the hub select input label from 'Conversion Key' to 'Hub' in StartHub, StartHubWithData, GetSourceFields and GetTargetFields, so all components label the hub picker the same way NewHubEvent already did. Labels only; the stored value is still the hub's conversion key and output ports keep the 'Conversion Key' label.",
+            "NewHubEvent: acknowledge hub events that carry no records instead of emitting or failing. Previously an empty event threw a CancelError in the 'First record' output type, leaving the webhook unanswered so Hubbi saw an error, and emitted an empty 'result' array in the 'All records at once' output type, firing the flow with nothing to process. Empty events are now logged and acknowledged, and no longer trigger the flow in any output type.",
+            "StartHubWithData: keep the inspector usable when the source field lookup fails. The SourceFields request is now isolated in a try/catch, so a transient endpoint error no longer rejects the whole inspector and leaves the component without any inputs - the hub picker and an empty 'Records' row are still offered.",
+            "Add 'example' values to the StartHub and StartHubWithData output port schemas so the variable picker can preview them.",
+            "Auth: share one ListTargetHubs request between the profile lookup and the validation check, and report a readable error when Base URL, Bearer Token or Client Key is blank instead of failing with a TypeError.",
+            "NewHubEvent: add a test(context) method so the designer's Flow Test Mode can emit a representative hub event without starting the flow or waiting for a real webhook. Hubbi exposes no endpoint for past events, so the sample record is synthesized from the selected hub's target field definitions (loaded through the same helper the output port options use) and emitted in the shape the configured output type produces."
+        ],
+        "1.8.0": [
+            "Receive Hub: renamed from \"New Hub Event\", with a description that says what the trigger does rather than how it is wired. The component identity is unchanged, so existing flows and their webhook URLs keep working.",
+            "Receive Hub: the read-only \"Webhook URL\" field is removed from the inspector. HubBI has no API for registering a webhook, so the registration is still manual - start the flow and read the URL from the \"Webhook registered\" entry the trigger writes to the flow log.",
+            "Receive Hub: the \"First Record\" output type is removed and the default changed from \"All records at once\" to \"One record at a time\". First Record discarded every record but the first, which silently loses data on a multi-record hub event. BREAKING: a flow configured with First Record has to pick one of the two remaining options.",
+            "Receive Hub: a flow refuses to start when a Start Hub or Start Hub With Data in it is configured with the hub the trigger receives from, which would make the flow trigger itself. The check also covers a hub set dynamically. The option lists cannot prevent the selection - the designer resolves them per component, in isolation from the flow - and a cycle spread across two separate flows is not detectable this way.",
+            "Flow Test Mode: Receive Hub throws with an explanation instead of emitting an example, reversing the synthesized sample added in 1.7.0. HubBI exposes no endpoint for reading past hub events, so any sample would have to be invented - it would match no real run and make the test pass while testing nothing. Real output requires starting the flow and sending data from the hub.",
+            "Map the qualified .NET type names TargetFields returns. HubBI reports field types in two notations and its two endpoints disagree: SourceFields answers with bare names (Int32, DateTime) while TargetFields answers with fully qualified ones (System.Int32, System.Guid). Only the bare form was recognised, so every field coming from a target hub was treated as plain text - a number arrived as text and a date field never offered the date picker. All three notations are now recognised, including nullable (System.Nullable`1[System.Int32]). Date-only types (Date, DateOnly) additionally carry config.enableTime=false, so the picker cannot produce a time component for a field whose schema declares \"format\": \"date\".",
             "Inspector dropdown calls are cached. The hub lists back a dropdown in every component and the designer resolves them in a concurrent burst whenever an inspector opens, which the 5 req/s quota does not absorb, so the three list helpers serve source calls through lib.callEndpointCached: staticCache keyed on URL + token + client key, guarded by context.lock so a cold cache still results in a single upstream request, TTL from context.config.listCacheTTL. A flow run is never served from cache.",
             "A hub lookup that fails behind a dropdown is logged and answered with an empty list rather than raising an error in the designer, since the inspector resolves the list before an account is necessarily connected. The same lookup in a flow run still fails loudly.",
-            "Every output port field carries an example value, so the variable picker previews what a field actually looks like instead of showing a bare key. This covers the static ports of Start Hub and Start Hub With Data, the hub and field-definition lists, the generic index / count / file options, and the per-field schemas derived from a hub definition, where the example follows the mapped .NET type.",
-            "Make API Call: call any HubBI endpoint that has no dedicated component. Takes a path relative to the Base URL of the connected account (or a full URL), a method, and optional query parameters, headers and JSON body, and returns the status code, response headers and body. The bearer token and the clientKey of the connected account are filled in automatically, so only the parts of the request that vary have to be given; an explicit clientKey still wins."
+            "Every output port field carries an example value, so the variable picker previews what a field actually looks like instead of showing a bare key. This extends the StartHub and StartHubWithData examples added in 1.7.0 to the hub and field-definition lists, the generic index / count / file options, and the per-field schemas derived from a hub definition, where the example follows the mapped .NET type.",
+            "GetSourceFields and GetTargetFields: fix the two stale \"Conversion Key is required!\" errors missed when the labels were renamed to Hub in 1.7.0.",
+            "Make API Call: call any HubBI endpoint that has no dedicated component. Takes a path relative to the Base URL of the connected account (or a full URL), a method, and optional query parameters, headers and JSON body, and returns the status code, response headers and body. The bearer token and the clientKey of the connected account are filled in automatically, so only the parts of the request that vary have to be given; an explicit clientKey still wins.",
+            "New connector icon: the square HubBI symbol, replacing the wide wordmark that was squeezed in the designer's square tile."
         ]
     }
 }

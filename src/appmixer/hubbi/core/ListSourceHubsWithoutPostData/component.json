@@ -3,7 +3,7 @@
     "label": "List Source Hubs Without Post Data",
     "description": "List hubs that can receive data from AI-Flows without post data for the authenticated client.",
     "author": "Appmixer <info@appmixer.com>",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "private": true,
     "auth": {
         "service": "appmixer:hubbi"

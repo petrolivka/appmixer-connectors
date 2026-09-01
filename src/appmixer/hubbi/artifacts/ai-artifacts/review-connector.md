@@ -3,7 +3,9 @@
 **Review Date:** 2026-08-11 (re-review; supersedes the 2026-07-16 pass)
 **Reviewer:** Claude AI
 **Branch:** feature/hubbi
-**Bundle version:** 2.0.0
+**Bundle version:** 2.0.0 at review time — that release was later renumbered to **1.7.0**
+when the connector went back to 1.x versioning (it is still pre-production, so the major bump
+was premature). Every `2.0.0` below refers to what shipped as 1.7.0.
 
 ## Summary
 
