@@ -3,7 +3,7 @@
     "label": "Get Source Fields",
     "description": "Load the source field definitions of a hub.",
     "author": "Appmixer <info@appmixer.com>",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "private": true,
     "auth": {
         "service": "appmixer:hubbi"
@@ -12,43 +12,63 @@
         "manager": "appmixer:hubbi",
         "resources": "requests"
     },
+    "properties": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "conversionKey": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "conversionKey"
+            ]
+        },
+        "inspector": {
+            "inputs": {
+                "conversionKey": {
+                    "type": "select",
+                    "label": "Hub",
+                    "tooltip": "Select the hub to load the source field definitions from.",
+                    "index": 0,
+                    "source": {
+                        "url": "/component/appmixer/hubbi/core/ListSourceHubsWithPostData?outPort=out",
+                        "data": {
+                            "properties": {
+                                "isSource": true
+                            },
+                            "messages": {
+                                "in/outputType": "array"
+                            },
+                            "transform": "./ListSourceHubsWithPostData#toSelectArray"
+                        }
+                    }
+                }
+            },
+            "groups": {
+                "required": {
+                    "label": "Required",
+                    "index": 1,
+                    "fields": [
+                        "conversionKey"
+                    ]
+                }
+            }
+        }
+    },
     "inPorts": [
         {
             "name": "in",
             "schema": {
                 "type": "object",
                 "properties": {
-                    "conversionKey": {
-                        "type": "string"
-                    },
                     "outputType": {
                         "type": "string"
                     }
-                },
-                "required": [
-                    "conversionKey"
-                ]
+                }
             },
             "inspector": {
                 "inputs": {
-                    "conversionKey": {
-                        "type": "select",
-                        "label": "Hub",
-                        "tooltip": "Select the hub to load the source field definitions from.",
-                        "index": 0,
-                        "source": {
-                            "url": "/component/appmixer/hubbi/core/ListSourceHubsWithPostData?outPort=out",
-                            "data": {
-                                "properties": {
-                                    "isSource": true
-                                },
-                                "messages": {
-                                    "in/outputType": "array"
-                                },
-                                "transform": "./ListSourceHubsWithPostData#toSelectArray"
-                            }
-                        }
-                    },
                     "outputType": {
                         "type": "select",
                         "label": "Output Type",
@@ -76,13 +96,6 @@
                     }
                 },
                 "groups": {
-                    "required": {
-                        "label": "Required",
-                        "index": 1,
-                        "fields": [
-                            "conversionKey"
-                        ]
-                    },
                     "settings": {
                         "label": "Settings",
                         "index": 2,

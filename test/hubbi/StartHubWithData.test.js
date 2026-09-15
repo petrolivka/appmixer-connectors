@@ -14,13 +14,14 @@ describe('Hubbi StartHubWithData', function() {
     beforeEach(function() {
         context = createMockContext();
         context.auth = { baseUrl: 'https://test.hubbi.nl', clientKey: 'ck-1', token: 'jwt' };
-        context.properties = {};
-        context.messages = { in: { content: { conversionKey: 'cv-1' } } };
+        context.properties = { conversionKey: 'cv-1' };
+        context.messages = { in: { content: {} } };
         context.httpRequest.resolves({});
     });
 
     it('throws CancelError when conversionKey is missing', async function() {
-        context.messages.in.content.conversionKey = undefined;
+        context.properties.conversionKey = undefined;
+        context.messages.in.content.records = { ADD: [{ f1: 'a' }] };
         await assert.rejects(
             () => StartHubWithData.receive(context),
             e => e.name === 'CancelError' && /Hub is required/.test(e.message)
@@ -95,8 +96,8 @@ describe('Hubbi StartHubWithData', function() {
             await StartHubWithData.receive(context);
             assert(context.httpRequest.notCalled);
             const { schema, inputs } = context.sendJson.firstCall.args[0];
-            assert.deepStrictEqual(schema.required, ['conversionKey']);
-            assert(inputs.conversionKey);
+            assert(!inputs.conversionKey, 'the hub picker lives in the properties, not in the in port');
+            assert(!schema.properties.conversionKey);
             assert(inputs.records);
             assert(!inputs.inputMode, 'the records-source switch must be removed');
             assert(!inputs.recordsArray, 'the array input must be removed');
@@ -119,14 +120,13 @@ describe('Hubbi StartHubWithData', function() {
             assert(!inputs.records.when, 'records must always be visible (no inputMode gate)');
         });
 
-        it('still returns the hub picker when the SourceFields lookup fails', async function() {
+        it('still returns the records input when the SourceFields lookup fails', async function() {
             context.properties = { generateInspector: true, conversionKey: 'cv-1' };
             context.httpRequest.rejects(new Error('network down'));
 
             await StartHubWithData.receive(context);
 
             const { schema, inputs } = context.sendJson.firstCall.args[0];
-            assert(inputs.conversionKey, 'the hub picker must survive a failed lookup');
             assert(inputs.records, 'the records input must survive a failed lookup');
             assert.deepStrictEqual(inputs.records.fields, {});
             assert.deepStrictEqual(schema.properties.records.properties.ADD.items.properties, {});

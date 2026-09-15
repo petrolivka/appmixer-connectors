@@ -3,7 +3,7 @@
     "label": "Start Hub",
     "description": "Start a hub without sending any data to it.",
     "author": "Appmixer <info@appmixer.com>",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "private": false,
     "auth": {
         "service": "appmixer:hubbi"
@@ -12,51 +12,53 @@
         "manager": "appmixer:hubbi",
         "resources": "requests"
     },
-    "inPorts": [
-        {
-            "name": "in",
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "conversionKey": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "conversionKey"
-                ]
+    "properties": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "conversionKey": {
+                    "type": "string"
+                }
             },
-            "inspector": {
-                "inputs": {
-                    "conversionKey": {
-                        "type": "select",
-                        "label": "Hub",
-                        "tooltip": "Select the hub to start. Only hubs that can be started without data are offered.",
-                        "index": 1,
-                        "source": {
-                            "url": "/component/appmixer/hubbi/core/ListSourceHubsWithoutPostData?outPort=out",
-                            "data": {
-                                "properties": {
-                                    "isSource": true
-                                },
-                                "messages": {
-                                    "in/outputType": "array"
-                                },
-                                "transform": "./ListSourceHubsWithoutPostData#toSelectArray"
-                            }
+            "required": [
+                "conversionKey"
+            ]
+        },
+        "inspector": {
+            "inputs": {
+                "conversionKey": {
+                    "type": "select",
+                    "label": "Hub",
+                    "tooltip": "Select the hub to start. Only hubs that can be started without data are offered.",
+                    "index": 1,
+                    "source": {
+                        "url": "/component/appmixer/hubbi/core/ListSourceHubsWithoutPostData?outPort=out",
+                        "data": {
+                            "properties": {
+                                "isSource": true
+                            },
+                            "messages": {
+                                "in/outputType": "array"
+                            },
+                            "transform": "./ListSourceHubsWithoutPostData#toSelectArray"
                         }
                     }
-                },
-                "groups": {
-                    "required": {
-                        "label": "Required",
-                        "index": 1,
-                        "fields": [
-                            "conversionKey"
-                        ]
-                    }
+                }
+            },
+            "groups": {
+                "required": {
+                    "label": "Required",
+                    "index": 1,
+                    "fields": [
+                        "conversionKey"
+                    ]
                 }
             }
+        }
+    },
+    "inPorts": [
+        {
+            "name": "in"
         }
     ],
     "outPorts": [

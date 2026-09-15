@@ -108,37 +108,16 @@ function assertNoCircularReference(context, conversionKey) {
     }
 }
 
-// Every hub a single component is configured with. A trigger keeps its
-// configuration in config.properties, while an action receives it through its
-// in port, where the designer stores the resolved values per incoming
-// connection under config.transform.<inPort>.<sourceId>.<sourcePort>.lambda.
-// Values still carrying a mustache placeholder are mapped from a previous step
-// and cannot be resolved statically, so they are skipped.
+// Every hub a single component is configured with. Start Hub and Start Hub
+// With Data keep the hub in config.properties, which cannot take outputs of
+// previous steps, so the value is known before the flow runs. A value still
+// carrying a mustache placeholder (a general flow variable) cannot be resolved
+// statically and is skipped.
 function getConfiguredHubs(component) {
 
-    const config = component.config || {};
-    const hubs = [];
+    const hub = ((component.config || {}).properties || {}).conversionKey;
 
-    const add = value => {
-        if (typeof value === 'string' && value && !value.includes('{{{')) {
-            hubs.push(value);
-        }
-    };
-
-    add((config.properties || {}).conversionKey);
-
-    const transform = config.transform || {};
-    for (const inPort of Object.keys(transform)) {
-        const sources = transform[inPort] || {};
-        for (const sourceId of Object.keys(sources)) {
-            const ports = sources[sourceId] || {};
-            for (const sourcePort of Object.keys(ports)) {
-                add(((ports[sourcePort] || {}).lambda || {}).conversionKey);
-            }
-        }
-    }
-
-    return hubs;
+    return typeof hub === 'string' && hub && !hub.includes('{{{') ? [hub] : [];
 }
 
 // The target field definitions describe the shape of one record, which is what

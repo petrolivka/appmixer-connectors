@@ -30,9 +30,14 @@ run the three list components and pick equivalents:
 
 | Flow | Where | Hub key | Hub name | Resolve with |
 |------|-------|---------|----------|--------------|
-| start-hubs | SetVariable `startHubKey` | `fc2b69aa-1853-44aa-9992-a43fb8bf9a2b` | Flow as source (without data) | `ListSourceHubsWithoutPostData` |
-| start-hubs | SetVariable `dataHubKey` | `59bd2669-808c-480b-b594-034c372f45a4` | Flow as Source (With data) | `ListSourceHubsWithPostData` |
+| start-hubs | `StartHub` `config.properties.conversionKey` and SetVariable `startHubKey` | `fc2b69aa-1853-44aa-9992-a43fb8bf9a2b` | Flow as source (without data) | `ListSourceHubsWithoutPostData` |
+| start-hubs | `StartHubWithData` `config.properties.conversionKey` and SetVariable `dataHubKey` | `59bd2669-808c-480b-b594-034c372f45a4` | Flow as Source (With data) | `ListSourceHubsWithPostData` |
 | receive-hub | `NewHubEvent` `config.properties.conversionKey` | `f40d47ec-a9cf-4d4b-b021-5ecf30bce03a` | Flow as target | `ListTargetHubs` |
+
+Since 1.9.0 the hub of the two Start Hub components is a component property,
+which cannot take a variable, so each key is set on the component directly.
+The SetVariable copy is only the expected value the Assert compares the
+Start Hub output with — keep both in sync when swapping a hub.
 
 The start-hubs flow also hardcodes the **source field names** of
 `Flow as Source (With data)` — `Name`, `Id`, `Age`, `DateOfBirth` — because

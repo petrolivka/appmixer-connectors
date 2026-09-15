@@ -10,7 +10,8 @@ module.exports = {
             return generateInspector(context);
         }
 
-        const { conversionKey, records } = context.messages.in.content;
+        const { conversionKey } = context.properties;
+        const { records } = context.messages.in.content;
 
         if (!conversionKey) {
             throw new context.CancelError('Hub is required!');
@@ -51,9 +52,8 @@ async function generateInspector(context) {
 
     // Any failure while loading the field definitions (transient endpoint error,
     // expired token, hub without fields) must NOT reject the whole inspector:
-    // the in port has no static schema, so the user would be left without any
-    // inputs at all, not even the hub picker. Isolate it and fall back to an
-    // empty record row instead.
+    // the in port has no static schema, so the user would be left without the
+    // Records input. Isolate it and fall back to an empty record row instead.
     if (conversionKey) {
         try {
             const baseUrl = context.auth.baseUrl.replace(/\/$/, '');
@@ -86,10 +86,12 @@ async function generateInspector(context) {
         }
     }
 
+    // The hub picker is declared in the component properties, not here: the
+    // designer offers outputs of previous steps only to in port fields, so a
+    // property keeps the Hub dropdown limited to the hubs themselves.
     const schema = {
         type: 'object',
         properties: {
-            conversionKey: { type: 'string' },
             records: {
                 type: 'object',
                 properties: {
@@ -100,34 +102,15 @@ async function generateInspector(context) {
                     }
                 }
             }
-        },
-        required: ['conversionKey']
+        }
     };
 
     const inputs = {
-        conversionKey: {
-            type: 'select',
-            label: 'Hub',
-            tooltip: 'Select the hub to start. Only hubs that accept data are offered.',
-            index: 0,
-            source: {
-                url: '/component/appmixer/hubbi/core/ListSourceHubsWithPostData?outPort=out',
-                data: {
-                    properties: {
-                        isSource: true
-                    },
-                    messages: {
-                        'in/outputType': 'array'
-                    },
-                    transform: './ListSourceHubsWithPostData#toSelectArray'
-                }
-            }
-        },
         records: {
             type: 'expression',
             label: 'Records',
             tooltip: 'Add one row per record. Each row uses the source field definitions of the selected hub. Within a row you can map single values from previous steps. All rows are sent to the hub in a single bulk request.',
-            index: 1,
+            index: 0,
             levels: ['ADD'],
             minItems: 1,
             fields: recordFields

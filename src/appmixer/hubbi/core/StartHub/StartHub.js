@@ -6,7 +6,7 @@ module.exports = {
 
     async receive(context) {
 
-        const { conversionKey } = context.messages.in.content;
+        const { conversionKey } = context.properties;
 
         if (!conversionKey) {
             throw new context.CancelError('Hub is required!');

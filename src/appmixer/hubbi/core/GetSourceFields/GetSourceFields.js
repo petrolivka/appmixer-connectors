@@ -12,7 +12,8 @@ module.exports = {
 
     async receive(context) {
 
-        const { conversionKey, outputType } = context.messages.in.content;
+        const { conversionKey } = context.properties;
+        const { outputType } = context.messages.in.content;
 
         if (context.properties.generateOutputPortOptions) {
             return lib.getOutputPortOptions(context, outputType, SCHEMA, { label: 'Source Fields', value: 'result' });

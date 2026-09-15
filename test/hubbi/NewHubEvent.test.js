@@ -41,15 +41,11 @@ describe('Hubbi NewHubEvent (trigger)', function() {
     // see the flow, so the cycle is rejected at flow start instead.
     describe('start: circular reference guard', function() {
 
-        // The designer stores an action's inputs per incoming connection, under
-        // config.transform.<inPort>.<sourceId>.<sourcePort>.lambda - not under
-        // config.properties, which is where a trigger keeps its own.
+        // Start Hub and Start Hub With Data keep the hub in config.properties.
         const startHub = (hub, type) => ({
             type: type || 'appmixer.hubbi.core.StartHub',
             label: 'Start Hub',
-            config: {
-                transform: { in: { 'receive-hub': { out: { lambda: { conversionKey: hub } } } } }
-            }
+            config: { properties: { conversionKey: hub } }
         });
 
         beforeEach(function() {
@@ -82,8 +78,22 @@ describe('Hubbi NewHubEvent (trigger)', function() {
             assert(context.saveState.calledOnce);
         });
 
-        it('starts when the hub of the other component is mapped from a previous step', async function() {
+        it('starts when the hub of the other component is a placeholder', async function() {
             context.flowDescriptor = { 'receive-hub': {}, 'start-hub': startHub('{{{var-hub}}}') };
+            await assert.doesNotReject(() => NewHubEvent.start(context));
+        });
+
+        // A Start Hub configured before 1.9.0 still carries the hub in its in
+        // port mapping. It fails with "Hub is required!" until the hub is picked
+        // again, so it cannot start the hub and there is no cycle to reject.
+        it('ignores a hub left in the in port mapping of a pre-1.9.0 Start Hub', async function() {
+            context.flowDescriptor = {
+                'receive-hub': {},
+                'start-hub': {
+                    type: 'appmixer.hubbi.core.StartHub',
+                    config: { transform: { in: { 'receive-hub': { out: { lambda: { conversionKey: 'cv-1' } } } } } }
+                }
+            };
             await assert.doesNotReject(() => NewHubEvent.start(context));
         });
 

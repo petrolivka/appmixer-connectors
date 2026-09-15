@@ -12,12 +12,12 @@ describe('Hubbi GetSourceFields', function() {
     beforeEach(function() {
         context = createMockContext();
         context.auth = { baseUrl: 'https://test.hubbi.nl', clientKey: 'ck-1', token: 'jwt' };
-        context.properties = {};
-        context.messages = { in: { content: { outputType: 'array', conversionKey: 'cv-1' } } };
+        context.properties = { conversionKey: 'cv-1' };
+        context.messages = { in: { content: { outputType: 'array' } } };
     });
 
     it('throws CancelError when conversionKey is missing', async function() {
-        context.messages.in.content.conversionKey = undefined;
+        context.properties.conversionKey = undefined;
         await assert.rejects(
             () => GetSourceFields.receive(context),
             e => e.name === 'CancelError' && /Hub is required/.test(e.message)

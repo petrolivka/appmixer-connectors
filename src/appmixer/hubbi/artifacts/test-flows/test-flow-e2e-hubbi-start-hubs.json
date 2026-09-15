@@ -74,25 +74,8 @@
             },
             "version": "1.0.0",
             "config": {
-                "transform": {
-                    "in": {
-                        "4201fb3a-2b9d-47e9-b78f-bccb4038721a": {
-                            "out": {
-                                "type": "json2new",
-                                "modifiers": {
-                                    "conversionKey": {
-                                        "567e3936-0e36-43a0-a5f7-389e1326edc5": {
-                                            "variable": "$.4201fb3a-2b9d-47e9-b78f-bccb4038721a.out.startHubKey",
-                                            "functions": []
-                                        }
-                                    }
-                                },
-                                "lambda": {
-                                    "conversionKey": "{{{567e3936-0e36-43a0-a5f7-389e1326edc5}}}"
-                                }
-                            }
-                        }
-                    }
+                "properties": {
+                    "conversionKey": "fc2b69aa-1853-44aa-9992-a43fb8bf9a2b"
                 }
             },
             "errorHandling": {
@@ -165,18 +148,15 @@
             },
             "version": "1.0.0",
             "config": {
+                "properties": {
+                    "conversionKey": "59bd2669-808c-480b-b594-034c372f45a4"
+                },
                 "transform": {
                     "in": {
                         "ddc3361e-8579-4c86-9289-28af0fbb87b6": {
                             "out": {
                                 "type": "json2new",
                                 "modifiers": {
-                                    "conversionKey": {
-                                        "9463ed91-6d78-40de-afd4-929ea929987e": {
-                                            "variable": "$.4201fb3a-2b9d-47e9-b78f-bccb4038721a.out.dataHubKey",
-                                            "functions": []
-                                        }
-                                    },
                                     "records": {
                                         "b69536f0-f604-4ca6-b9e8-294acb978426": {
                                             "variable": "$.9475f58c-ba12-4a88-8c05-b9efd1395b62.out.started",
@@ -205,7 +185,6 @@
                                     }
                                 },
                                 "lambda": {
-                                    "conversionKey": "{{{9463ed91-6d78-40de-afd4-929ea929987e}}}",
                                     "records": {
                                         "ADD": [
                                             {

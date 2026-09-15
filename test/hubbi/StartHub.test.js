@@ -12,11 +12,21 @@ describe('Hubbi StartHub', function() {
     beforeEach(function() {
         context = createMockContext();
         context.auth = { baseUrl: 'https://test.hubbi.nl', clientKey: 'ck-1', token: 'jwt' };
-        context.messages = { in: { content: { conversionKey: 'cv-1' } } };
+        context.properties = { conversionKey: 'cv-1' };
+        context.messages = { in: { content: {} } };
     });
 
     it('throws CancelError when conversionKey is missing', async function() {
-        context.messages.in.content.conversionKey = undefined;
+        context.properties.conversionKey = undefined;
+        await assert.rejects(
+            () => StartHub.receive(context),
+            e => e.name === 'CancelError' && /Hub is required/.test(e.message)
+        );
+    });
+
+    it('reads the hub from the properties, not from the incoming message', async function() {
+        context.properties.conversionKey = undefined;
+        context.messages.in.content.conversionKey = 'cv-1';
         await assert.rejects(
             () => StartHub.receive(context),
             e => e.name === 'CancelError' && /Hub is required/.test(e.message)
