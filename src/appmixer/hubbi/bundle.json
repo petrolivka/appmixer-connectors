@@ -59,7 +59,8 @@
         ],
         "1.9.0": [
             "Hub picker moved from the in port to the component properties in Start Hub, Start Hub With Data, Get Source Fields and Get Target Fields, the way Receive Hub already had it. The designer offers outputs of previous steps only to in port fields, so the Hub dropdown now lists just the hubs of the connected HubBI client instead of mixing them with the output of earlier steps. The general flow variables (Flow ID, Now, ...) stay available in the dropdown, as on every field. BREAKING: the hub is now stored in config.properties instead of the in port mapping, so every existing Start Hub and Start Hub With Data has to have its hub selected again, and a hub can no longer be mapped from a previous step.",
-            "Receive Hub: the circular reference check reads the hub from the Start Hub properties. The in port branch that covered a hub mapped from a previous step is removed, since such a mapping is no longer possible."
+            "Receive Hub: the circular reference check reads the hub from the Start Hub properties. The in port branch that covered a hub mapped from a previous step is removed, since such a mapping is no longer possible.",
+            "Make API Call removed at the customer's request (Freshdesk ticket 9713): the HubBI integration does not need a generic call-any-endpoint action, and the customer already shipped its own build without it. BREAKING: a flow using Make API Call has to replace it."
         ]
     }
 }

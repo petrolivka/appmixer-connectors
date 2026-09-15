@@ -1,6 +1,6 @@
 # HubBI E2E test flows
 
-Three flows cover every non-private HubBI component. The five `private: true`
+Two flows cover every non-private HubBI component. The five `private: true`
 components (`ListTargetHubs`, `ListSourceHubsWithPostData`,
 `ListSourceHubsWithoutPostData`, `GetSourceFields`, `GetTargetFields`) are
 dropdown/variable-picker source helpers — they must not be standalone flow
@@ -11,7 +11,6 @@ and they have their own CLI component tests in `../ai-artifacts/test-plan.json`.
 | Flow | Components under test | Runs unattended |
 |------|----------------------|-----------------|
 | `test-flow-e2e-hubbi-start-hubs.json` | `StartHub`, `StartHubWithData` | yes |
-| `test-flow-e2e-hubbi-make-api-call.json` | `MakeApiCall` | yes |
 | `test-flow-e2e-hubbi-receive-hub.json` | `NewHubEvent` (Receive Hub) | **no — manual** |
 
 ```bash

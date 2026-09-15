@@ -354,6 +354,12 @@ module.exports = [
         reason: 'The customer (Freshdesk ticket 9713) explicitly requires the hub field to offer hubs and nothing else: a hub is never mapped from a previous step in their integration, and a free-text conversion key typed by hand is not a case they want to support. The pickers are therefore type "select", which is what stops a conversion key being typed by hand. The other half of the request - not offering the output of earlier steps - is delivered by declaring the picker in the component properties (since 1.9.0): the designer (appmixer-fe fieldset/convertor.js) builds a properties fieldset from the component\'s own variables only, while outputs of previous steps are attached to in port (link) fieldsets. "variables": false is not an option: the hubs of a source-backed select arrive as static variables shown in the variable picker, so the flag suppresses the whole option list (verified in the designer, reverted). Accepted trade-off: if the ListTargetHubs / ListSourceHubs* lookup fails, the component cannot be configured at all instead of degrading to manual entry.'
     },
     {
+        validator: 'connector-has-makeapicall',
+        messageIncludes: 'no MakeApiCall component',
+        paths: ['hubbi/bundle.json'],
+        reason: 'HubBI is a customer-specific connector (Freshdesk ticket 9713), not a catalog release. The customer asked for Make API Call to be removed - their integration only starts and receives hubs, and they already shipped their own 1.8.1 build without it - so the component was dropped in 1.9.0. Re-add it if the connector is ever released to the public catalog.'
+    },
+    {
         validator: 'dynamic-outport-required-inputs',
         messageIncludes: 'ignoreAuth=true',
         paths: ['hubbi/core/NewHubEvent/component.json'],
